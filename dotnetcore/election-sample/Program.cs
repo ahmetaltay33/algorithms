@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.VisualBasic.CompilerServices;
-using Timer = System.Timers.Timer;
+using System.Threading.Tasks;
 
 namespace election_sample
 {
@@ -27,7 +26,10 @@ namespace election_sample
         
         static Oy[] GenerateRandomData(int count)
         {
-            var arr = new Oy[] { };
+            var arrLength = CIller.Length * CIlceler.Length * CMahalleler.Length * COkullar.Length * CSandiklar.Length *
+                            count;
+            var arr = new Oy[arrLength];
+            var arrIndex = 0;
             for (int i = 0; i < CIller.Length; i++)
             {
                 for (int j = 0; j < CIlceler.Length; j++)
@@ -40,17 +42,17 @@ namespace election_sample
                             {
                                 for (int n = 0; n < count; n++)
                                 {
+                                    arrIndex++;
                                     var oy = new Oy()
                                     {
-                                        Id = arr.Length + 1,
+                                        Id = arrIndex,
                                         Il = CIller[i],
                                         Ilce = CIlceler[j],
                                         Mahalle = CMahalleler[k],
                                         Okul = COkullar[l],
                                         SandikNo = CSandiklar[m],
                                     };
-                                    Array.Resize(ref arr, arr.Length + 1);
-                                    arr[arr.Length - 1] = oy;
+                                    arr[arrIndex - 1] = oy;
                                 }
                             }
                         }
@@ -60,14 +62,56 @@ namespace election_sample
             return arr;
         }
 
+        static Oy[] GenerateRandomDataAsParallel(int count)
+        {
+            var arrLength = CIller.Length * CIlceler.Length * CMahalleler.Length * COkullar.Length * CSandiklar.Length *
+                            count;
+            var arr = new Oy[arrLength];
+            var arrIndex = 0;
+            Parallel.For(0, CIller.Length, i =>
+            {
+                Parallel.For(0, CIlceler.Length, j =>
+                {
+                    Parallel.For(0, CMahalleler.Length, k =>
+                    {
+                        Parallel.For(0, COkullar.Length, l =>
+                        {
+                            Parallel.For(0, CSandiklar.Length, m =>
+                            {
+                                Parallel.For(0, count, n =>
+                                {
+                                    Interlocked.Increment(ref arrIndex);
+                                    var oy = new Oy()
+                                    {
+                                        Id = arrIndex,
+                                        Il = CIller[i],
+                                        Ilce = CIlceler[j],
+                                        Mahalle = CMahalleler[k],
+                                        Okul = COkullar[l],
+                                        SandikNo = CSandiklar[m],
+                                    };
+                                    arr[arrIndex - 1] = oy;
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+            return arr;
+        }
+        
         static void Main(string[] args)
         {
             Console.WriteLine("Rastgele veriler oluşturuluyor...");
             var sw = Stopwatch.StartNew();
-            var oylar = GenerateRandomData(10);   
+            var oylar = GenerateRandomData(10000);   
             sw.Stop();
-            Console.WriteLine($"Rastgele oluşturulan kayıtların sayısı {oylar.Length} Geçen süre ms: {sw.ElapsedMilliseconds}");
-            
+            Console.WriteLine($"Rastgele veriler oluşturuldu. Kayıt sayısı: {oylar.Length} Boyut: {Marshal.SizeOf(oylar)} Geçen süre ms: {sw.ElapsedMilliseconds}");
+            sw.Start();
+            var oylar2 = GenerateRandomDataAsParallel(10000);
+            sw.Stop();
+            Console.WriteLine($"Rastgele veriler oluşturuldu. Kayıt sayısı: {oylar2.Length} Boyut: {Marshal.SizeOf(oylar2)} Geçen süre ms: {sw.ElapsedMilliseconds}");
+            Console.WriteLine("");
             Console.WriteLine("İşlemler tamamlandı.");
         }
     }
