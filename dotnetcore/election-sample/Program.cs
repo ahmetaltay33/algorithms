@@ -119,7 +119,7 @@ namespace election_sample
                         {
                             Parallel.For(0, CSandiklar.Length, m =>
                             {
-                                Parallel.For(1, _count, n =>
+                                Parallel.For(0, _count, n =>
                                 {
                                     var oy = new Oy()
                                     {
