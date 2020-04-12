@@ -16,6 +16,7 @@ namespace election_sample
         public string Mahalle { get; set; }
         public string Okul { get; set; }
         public int SandikNo { get; set; }
+        public string Parti { get; set; }
     }
 
     class Program
@@ -25,8 +26,16 @@ namespace election_sample
         private static readonly string[] CMahalleler = new[] {"Merkez", "A", "B", "C", "D"};
         private static readonly string[] COkullar = new[] {"X", "Y", "Z", "Q", "W"};
         private static readonly int[] CSandiklar = new[] {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        private static readonly string[] CPartiler = new[] {"A Partisi", "B Partisi"};
         private static int _count = 1;
         private static int _delayMs = 1;
+
+        private static string GenerateRandomPartyName()
+        {
+            var random = new Random();
+            var index = random.Next(0, 1);    
+            return CPartiler[index];
+        }
 
         private static List<Oy> GenerateRandomData()
         {
@@ -51,6 +60,7 @@ namespace election_sample
                                         Mahalle = CMahalleler[k],
                                         Okul = COkullar[l],
                                         SandikNo = CSandiklar[m],
+                                        Parti = GenerateRandomPartyName()
                                     };
                                     Thread.Sleep(_delayMs);
                                     arr.Add(oy);
@@ -91,6 +101,7 @@ namespace election_sample
                                             Mahalle = CMahalleler[k],
                                             Okul = COkullar[l],
                                             SandikNo = CSandiklar[m],
+                                            Parti = GenerateRandomPartyName()
                                         };
                                         Thread.Sleep(_delayMs);
                                         arr.Add(oy);
@@ -129,6 +140,7 @@ namespace election_sample
                                         Mahalle = CMahalleler[k],
                                         Okul = COkullar[l],
                                         SandikNo = CSandiklar[m],
+                                        Parti = GenerateRandomPartyName()
                                     };
                                     Thread.Sleep(_delayMs);
                                     arr.Add(oy);
@@ -174,7 +186,7 @@ namespace election_sample
             arr.Clear();
         }
 
-        private static void CleanMemory()
+        private static void ClearMemory()
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -199,13 +211,13 @@ namespace election_sample
             }
 
             TestSirali();
-            CleanMemory();
+            ClearMemory();
 
             TestIllerParalel();
-            CleanMemory();
+            ClearMemory();
             
             TestTamamiParalel();
-            CleanMemory();
+            ClearMemory();
         }
     }
 }
