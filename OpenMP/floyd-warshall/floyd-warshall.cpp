@@ -8,6 +8,7 @@
 #include <string>
 #include <Windows.h>
 #include <ctime>
+#include <omp.h>
 
 using namespace std;
 
@@ -18,16 +19,13 @@ float*** floyd_warshall(const int n, float** w, const int thread_num = 1)
 	for (int k = 1; k < n + 1; ++k) // arrays
 	{
 		a[k] = new float* [n];
-#pragma omp parallel num_threads(thread_num)
+#pragma omp parallel for num_threads(thread_num)
+		for (int i = 0; i < n; ++i) // rows
 		{
-#pragma omp for
-			for (int i = 0; i < n; ++i) // rows
+			a[k][i] = new float[n];
+			for (int j = 0; j < n; ++j) // cols
 			{
-				a[k][i] = new float[n];
-				for (int j = 0; j < n; ++j) // cols
-				{
-					a[k][i][j] = min(a[k - 1][i][j], (a[k - 1][i][k - 1] + a[k - 1][k - 1][j]));
-				}
+				a[k][i][j] = min(a[k - 1][i][j], (a[k - 1][i][k - 1] + a[k - 1][k - 1][j]));
 			}
 		}
 	}
@@ -73,6 +71,24 @@ bool checkArrayEquality(int row, int col, float** a1, float** a2)
 	return true;
 }
 
+void deleteArray(int size, float** w)
+{
+	for (int i = 0; i < size; ++i)
+		delete[] w[i];
+}
+
+void deleteArray(int size, int size2, float*** w)
+{
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < size2; ++j)
+		{
+			delete[] w[i][j];
+		}
+		delete[] w[i];
+	}
+}
+
 float** generateRandomPath(int size)
 {
 	std::mt19937 gen;
@@ -105,8 +121,7 @@ void testLoad(int size, int thread_num = 1)
 	const auto elapsedTime = timeEnd - timeBegin;
 	printf("Test tamamlandi. Gecen sure: %ldms\n", elapsedTime);
 
-	delete[] sortestPaths;
-	delete[] randomPaths;
+	deleteArray(size + 1, size, sortestPaths);
 }
 
 void testFloydWarshallAlgorithm()
@@ -169,12 +184,11 @@ void testFloydWarshallAlgorithm()
 	bool isSuccess = checkArrayEquality(4, 4, sortestPaths[4], expectedResult);
 
 	if (isSuccess)
-		cout << "Floyd-Warshall algoritmasi calisiyor. Dogrulama testi gecildi.\n\n";
+		cout << "Floyd-Warshall algoritmasi calisiyor. Dogrulama testi gecildi.\n";
 	else
-		cout << "Floyd-Warshall algoritmasi calismiyor. Dogrulama basarisiz!\n\n";
+		cout << "Floyd-Warshall algoritmasi calismiyor. Dogrulama basarisiz!\n";
 
-	delete[] sortestPaths;
-	delete[] testInput;
+	deleteArray(5, 4, sortestPaths);
 }
 
 int main()
@@ -187,4 +201,5 @@ int main()
 	testLoad(1000, 8);
 	cout << "\n";
 	cout << "Tum islemler tamamlandi cikmak icin bir tusa basiniz...\n";
+	getchar();
 }
