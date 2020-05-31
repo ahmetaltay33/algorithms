@@ -11,19 +11,23 @@
 
 using namespace std;
 
-float*** floyd_warshall(int n, float** w)
+float*** floyd_warshall(const int n, float** w, const int thread_num = 1)
 {
-	float*** a = new float**[n+1];
+	float*** a = new float**[n + 1];
 	a[0] = w;
 	for (int k = 1; k < n + 1; ++k) // arrays
 	{
-		a[k] = new float*[n];
-		for (int i = 0; i < n; ++i) // rows
+		a[k] = new float* [n];
+#pragma omp parallel num_threads(thread_num)
 		{
-			a[k][i] = new float[n];
-			for (int j = 0; j < n; ++j) // cols
+#pragma omp for
+			for (int i = 0; i < n; ++i) // rows
 			{
-				a[k][i][j] = min(a[k - 1][i][j], (a[k - 1][i][k - 1] + a[k - 1][k - 1][j]));
+				a[k][i] = new float[n];
+				for (int j = 0; j < n; ++j) // cols
+				{
+					a[k][i][j] = min(a[k - 1][i][j], (a[k - 1][i][k - 1] + a[k - 1][k - 1][j]));
+				}
 			}
 		}
 	}
@@ -50,7 +54,6 @@ void print3DArray(int deep, int row, int col, float*** w)
 {
 	for (int k = 0; k < deep; ++k) // arrays
 	{
-		cout << "\n";
 		printf("Array[%d]\n", k);
 		print2DArray(row, col, w[k]);
 	}
@@ -86,23 +89,24 @@ float** generateRandomPath(int size)
 	return a;
 }
 
-void testSequentialLoad(int size)
+void testLoad(int size, int thread_num = 1)
 {
-	printf("Sirali test %dx%d boyutlu dizi baslatiliyor...\n", size, size);
+	printf("Test %dx%d boyutlu matris icin %d cekirdek kullanilarak baslatiliyor...\n", size, size, thread_num);
 	
 	//Test verileri olusturuluyor...
 	float** randomPaths = generateRandomPath(size);
 
 	//Test verileri içinden en kýsa yolun bulunmasý için algoritma çalýþtýrýyor...
 	clock_t timeBegin = clock();
-	float*** randomSortestPaths = floyd_warshall(size, randomPaths);
+	float*** sortestPaths = floyd_warshall(size, randomPaths, thread_num);
 	clock_t timeEnd = clock();
 
 	//Algoritmanýn calisma suresi yazdiriliyor.
 	const auto elapsedTime = timeEnd - timeBegin;
-	printf("Sirali test %dx%d boyutlu dizi icin calistirildi, Gecen sure: %ldms\n", size, size, elapsedTime);
+	printf("Test tamamlandi. Gecen sure: %ldms\n", elapsedTime);
 
-	delete[] randomSortestPaths;
+	delete[] sortestPaths;
+	delete[] randomPaths;
 }
 
 void testFloydWarshallAlgorithm()
@@ -170,15 +174,17 @@ void testFloydWarshallAlgorithm()
 		cout << "Floyd-Warshall algoritmasi calismiyor. Dogrulama basarisiz!\n\n";
 
 	delete[] sortestPaths;
+	delete[] testInput;
 }
 
 int main()
 {
-	cout << "En kisa yol probleminin Floyd-Warshall algoritmasi kullanilarak paralel programlama ile cozumu\n";
-
+	cout << "En kisa yol probleminin Floyd-Warshall algoritmasi kullanilarak paralel programlama ile cozumu\n\n";
 	testFloydWarshallAlgorithm();
-	testSequentialLoad(1000);
-
-	cout << "Tum islemler tamamlandi cikmak icin bir tusa basiniz...";
-	getchar();
+	cout << "\n";
+	testLoad(1000);
+	cout << "\n";
+	testLoad(1000, 8);
+	cout << "\n";
+	cout << "Tum islemler tamamlandi cikmak icin bir tusa basiniz...\n";
 }
