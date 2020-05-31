@@ -76,7 +76,7 @@ namespace election_sample
 
         private static ConcurrentBag<Oy> GenerateRandomDataUsingTasks()
         {
-            var arr = new ConcurrentBag<Oy>();
+            var arr = new ConcurrentBag<Oy>(); // Thread Safe List
             var tasks = new List<Task>();
             for (int i = 0; i < CIller.Length; i++)
             {
@@ -119,7 +119,8 @@ namespace election_sample
 
         private static ConcurrentBag<Oy> GenerateRandomDataUsingParallelLoop()
         {
-            var arr = new ConcurrentBag<Oy>();
+            var arr = new ConcurrentBag<Oy>(); // Thread Safe List
+            for (int i = 0; i < CIller.Length; i++)
             Parallel.For(0, CIller.Length, i =>
             {
                 Parallel.For(0, CIlceler.Length, j =>
