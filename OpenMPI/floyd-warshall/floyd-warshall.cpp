@@ -1,6 +1,9 @@
 // floyd-warshall.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
 #include <iostream>
 #include <mpi.h>
 #include <random>
@@ -12,9 +15,10 @@ using namespace std;
 
 float*** floyd_warshall(const int n, float** w)
 {
-	float*** a = new float** [(n + 1)];
+	const int size = n + 1;
+	float*** a = new float** [size];
 	a[0] = w;
-	for (int k = 1; k < n + 1; ++k) // arrays
+	for (int k = 1; k < size; ++k) // arrays
 	{
 		a[k] = new float* [n];
 		for (int i = 0; i < n; ++i) // rows

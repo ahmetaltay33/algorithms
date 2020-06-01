@@ -3,6 +3,7 @@
 
 // ReSharper disable CommentTypo
 // ReSharper disable StringLiteralTypo
+// ReSharper disable IdentifierTypo
 #include <iostream>
 #include <random>
 #include <string>
@@ -14,9 +15,10 @@ using namespace std;
 
 float*** floyd_warshall(const int n, float** w, const int thread_num = 1)
 {
-	float*** a = new float**[n + 1];
+	const int size = n + 1;
+	float*** a = new float**[size];
 	a[0] = w;
-	for (int k = 1; k < n + 1; ++k) // arrays
+	for (int k = 1; k < size; ++k) // arrays
 	{
 		a[k] = new float* [n];
 #pragma omp parallel for num_threads(thread_num)
@@ -202,4 +204,5 @@ int main()
 	cout << "\n";
 	cout << "Tum islemler tamamlandi cikmak icin bir tusa basiniz...\n";
 	getchar();
+	return 0;
 }
