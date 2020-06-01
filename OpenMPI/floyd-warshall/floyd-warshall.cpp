@@ -13,18 +13,23 @@
 
 using namespace std;
 
-float*** floyd_warshall(const int n, float** w)
+const int MASTER = 0;
+const int PATH_SIZE = 20;
+float** paths;
+
+float*** floyd_warshall(const int start, const int end, float** w)
 {
-	const int size = n + 1;
-	float*** a = new float** [size];
+	const int size = end - start;
+	const int ksize = size + 1;
+	float*** a = new float** [ksize];
 	a[0] = w;
-	for (int k = 1; k < size; ++k) // arrays
+	for (int k = 1; k < ksize; ++k) // arrays
 	{
-		a[k] = new float* [n];
-		for (int i = 0; i < n; ++i) // rows
+		a[k] = new float* [size];
+		for (int i = start; i < end; ++i) // rows
 		{
-			a[k][i] = new float[n];
-			for (int j = 0; j < n; ++j) // cols
+			a[k][i] = new float[size];
+			for (int j = start; j < end; ++j) // cols
 			{
 				a[k][i][j] = min(a[k - 1][i][j], (a[k - 1][i][k - 1] + a[k - 1][k - 1][j]));
 			}
@@ -106,25 +111,6 @@ float** generateRandomPath(int size)
 	return a;
 }
 
-void testLoad(int size)
-{
-	printf("Test %dx%d boyutlu matris icin %d cekirdek kullanilarak baslatiliyor...\n", size, size, 1);
-
-	//Test verileri olusturuluyor...
-	float** randomPaths = generateRandomPath(size);
-
-	//Test verileri içinden en kýsa yolun bulunmasý için algoritma çalýþtýrýyor...
-	clock_t timeBegin = clock();
-	float*** sortestPaths = floyd_warshall(size, randomPaths);
-	clock_t timeEnd = clock();
-
-	//Algoritmanýn calisma suresi yazdiriliyor.
-	const auto elapsedTime = timeEnd - timeBegin;
-	printf("Test tamamlandi. Gecen sure: %ldms\n", elapsedTime);
-
-	deleteArray(size + 1, size, sortestPaths);
-}
-
 void testFloydWarshallAlgorithm()
 {
 	float** testInput = new float* [4];
@@ -179,7 +165,7 @@ void testFloydWarshallAlgorithm()
 	expectedResult[3][2] = 7;
 	expectedResult[3][3] = 0;
 
-	float*** sortestPaths = floyd_warshall(4, testInput);
+	float*** sortestPaths = floyd_warshall(0, 3, testInput);
 	print3DArray(5, 4, 4, sortestPaths);
 
 	bool isSuccess = checkArrayEquality(4, 4, sortestPaths[4], expectedResult);
@@ -194,15 +180,73 @@ void testFloydWarshallAlgorithm()
 
 int main(int argc, char *argv[])
 {
-	int sira, boyut;
-	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &sira);
-	MPI_Comm_size(MPI_COMM_WORLD, &boyut);
-	
-	// TODO: Open MPI logic buraya yazýlacak.
-	
-	printf("Merhaba dunya %d. islem: Toplam %d islem var.\n", sira, boyut);
+	int task_id, num_tasks, chunksize, leftover, tag2, tag1, offset,
+		dest, i, source, j;
+	float ***mysum, ***sum;
+	MPI_Status status;
 
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &task_id);
+	MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+	printf("MPI task %d has started...\n", task_id);
+	chunksize = (PATH_SIZE / num_tasks); // 1001 / 4 = 250
+	leftover = (PATH_SIZE % num_tasks); // 1001 % 4 = 1
+	tag2 = 1;
+	tag1 = 2;
+	
+	if(task_id == MASTER) // Master Thread
+	{
+		paths = generateRandomPath(PATH_SIZE);
+		printf("Yollar olusturuldu. Matris boyutu: %d        \n", PATH_SIZE);
+		printf("Task ID: %d, Number of Tasks: %d\n", task_id, num_tasks);
+
+		/* Send each task its portion of the array - master keeps 1st part plus leftover elements */
+		offset = chunksize + leftover;
+		for (dest = 1; dest < num_tasks; dest++) {
+			MPI_Send(&offset, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+			MPI_Send(&paths[offset], chunksize, MPI_DOUBLE, dest, tag2, MPI_COMM_WORLD);
+			printf("Sent %d elements to task %d offset= %d\n", chunksize, dest, offset);
+			offset += chunksize;
+		}
+
+		/* Master does its part of the work */
+		offset = 0;
+		mysum = floyd_warshall(offset, chunksize + leftover, paths);
+
+		/* Wait to receive results from each task */
+		for (i = 1; i < num_tasks; i++) {
+			source = i;
+			MPI_Recv(&offset, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+			MPI_Recv(&paths[offset], chunksize, MPI_DOUBLE, source, tag2, MPI_COMM_WORLD, &status);
+		}
+
+		/* Get final sum and print sample results */
+		MPI_Reduce(&mysum, &sum, 1, MPI_DOUBLE, MPI_SUM, MASTER, MPI_COMM_WORLD);
+
+		print3DArray(PATH_SIZE + 1, 10, 10, sum);
+
+	}  /* end of master section */
+	else // Slave Threads
+	{
+		/* Receive my portion of array from the master task */
+		source = MASTER;
+		MPI_Recv(&offset, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+		MPI_Recv(&paths[offset], chunksize, MPI_DOUBLE, source, tag2, MPI_COMM_WORLD, &status);
+
+		/* Do my part of the work */
+		mysum = floyd_warshall(offset, chunksize, paths);
+
+		/* Send my results back to the master task */
+		dest = MASTER;
+		MPI_Send(&offset, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+		MPI_Send(&paths[offset], chunksize, MPI_DOUBLE, MASTER, tag2, MPI_COMM_WORLD);
+
+		/* Use sum reduction operation to obtain final sum */
+		MPI_Reduce(&mysum, &sum, 1, MPI_DOUBLE, MPI_SUM, MASTER, MPI_COMM_WORLD);
+
+	}  /* end of slaves */
+	
 	MPI_Finalize();
+
 	return 0;
 }
