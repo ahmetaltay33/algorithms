@@ -1,10 +1,12 @@
+// ReSharper disable CommentTypo
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 #include <mpi.h> 
 #include <stdio.h> 
-#include <stdlib.h> 
 #include <windows.h> 
 
 const int n = 1000;
-int a[10000];
+int a[n];
 
 // Slave tasklar icin gecici matris
 int a2[n];
@@ -12,7 +14,7 @@ int a2[n];
 int main(int argc, char* argv[])
 {
   int pid, np, elements_per_process, n_elements_recieved;
-  double start, end, total = 0;
+  double start = 0, end = 0;
   // np -> Task sayisi 
   // pid -> Task ID 
 
