@@ -1,18 +1,18 @@
 #include <mpi.h> 
 #include <stdio.h> 
 #include <stdlib.h> 
-#include <ctime> 
+#include <windows.h> 
 
 const int n = 1000;
-int a[n];
+int a[10000];
 
 // Slave tasklar icin gecici matris
-int a2[10000];
+int a2[n];
 
 int main(int argc, char* argv[])
 {
-
   int pid, np, elements_per_process, n_elements_recieved;
+  double start, end, total = 0;
   // np -> Task sayisi 
   // pid -> Task ID 
 
@@ -28,15 +28,17 @@ int main(int argc, char* argv[])
 
   // Master Task
   if (pid == 0) {
+    start = MPI_Wtime();
+
     int index, i;
     elements_per_process = n / np;
 
+    //Matris varsayilan degerleri ile dolduruluyor
+    for (int i = 0; i < n; i++)
+      a[i] = i;
+
     // birden fazla task calisiyor ise
     if (np > 1) {
-
-      //Matris varsayilan degerleri ile dolduruluyor
-      for (int i = 0; i < n; i++) 
-        a[i] = i;
 
       // Matris parcalara bolunup toplanmasi icin slave tasklara gonderiliyor. 
       for (i = 1; i < np - 1; i++) {
@@ -57,7 +59,10 @@ int main(int argc, char* argv[])
     // Master task kendi uzerine dusen barca icin hesaplamayi yapiyor
     int sum = 0;
     for (i = 0; i < elements_per_process; i++)
+    {
       sum += a[i];
+      Sleep(10);
+    }
 
     // Slave tasklardan toplam sonuclarini alip birlestiriyor
     int tmp;
@@ -67,7 +72,10 @@ int main(int argc, char* argv[])
       sum += tmp;
     }
 
+    end = MPI_Wtime();
+    
     printf("Master Task Sonuc: %d\n", sum);
+    printf("Gecen Sure: %f", end - start);
   }
   // Slave Tasks 
   else {
@@ -79,8 +87,10 @@ int main(int argc, char* argv[])
     // Slave taska ait matris icerigi toplaniyor
     int partial_sum = 0;
     for (int i = 0; i < n_elements_recieved; i++)
+    {
       partial_sum += a2[i];
-
+      Sleep(10);
+    }
     printf("Slave Task: %d, Parcali Toplam: %d", pid, partial_sum);
 
     // Toplam sonucu master taska gonderiliyor 
