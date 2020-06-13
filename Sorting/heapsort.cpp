@@ -7,20 +7,9 @@ void Exchange(int* A, int i, int j)
 	A[j] = e;
 }
 
-int RootValue(const int* A)
-{
-	return A[0];
-}
-
 int Parent(int i)
 {
 	return i / 2;
-}
-
-int ParentValue(const int* A, int i)
-{
-	const int p = Parent(i);
-	return A[p];
 }
 
 int Left(int i)
@@ -28,38 +17,14 @@ int Left(int i)
 	return (i * 2) + 1;
 }
 
-int LeftValue(const int* A, int i)
-{
-	const int l = Left(i);
-	return A[l];
-}
-
 int Right(int i)
 {
 	return (i * 2) + 2;
 }
 
-int RightValue(const int* A, int i)
-{
-	const int r = Right(i);
-	return A[r];
-}
-
-int GetLeafsStartIndex(int n)
+int Leafs(int n)
 {
 	return n / 2;
-}
-
-int* GetLeafValues(const int* A, int n)
-{
-	const int s = GetLeafsStartIndex(n);
-	const int c = (n - s);
-	int* W = new int[c];
-	for (int i = 0; i < c; ++i)
-	{
-		W[i] = A[s + i];
-	}
-	return W;
 }
 
 void MaxHeapify(int* A, int n, int i)
@@ -80,7 +45,7 @@ void MaxHeapify(int* A, int n, int i)
 
 void BuildMaxHeap(int* A, int n)
 {
-	const int s = GetLeafsStartIndex(n);
+	const int s = Leafs(n);
 	for (int i = s - 1; i >= 0; i--)
 	{
 		MaxHeapify(A, n, i);

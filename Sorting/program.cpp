@@ -22,7 +22,7 @@ void printArray(int* A, int r)
 
 int main()
 {
-	cout << "Sort-Algorithms!\n\n";
+	cout << "Sort-Algorithms\n\n";
 	int* A;
 	
 	cout << "Insertion-Sort\n";
