@@ -2,6 +2,8 @@
 #include <array>
 #include <string>
 
+
+#include "binarytree.h"
 #include "heapsort.h"
 #include "mergesort.h"
 #include "insertionsort.h"
@@ -48,6 +50,37 @@ int main()
 	printArray(A, 10);
 	delete[] A;
 	cout << "\n";
+
+	cout << "Binary-Tree\n";
+	cout << "{ 15, 6, 18, 3, 7, 17, 20, 2, 4, 13, 9 }\n";
+	node* root = nullptr;
+	root = TreeInsert(root, 15);
+	TreeInsert(root, 6);
+	TreeInsert(root, 18);
+	TreeInsert(root, 3);
+	TreeInsert(root, 7);
+	TreeInsert(root, 17);
+	TreeInsert(root, 20);
+	TreeInsert(root, 2);
+	TreeInsert(root, 4);
+	TreeInsert(root, 13);
+	TreeInsert(root, 9);
+
+	string treeOut;
+	TreePrint(root, treeOut);
+	cout << "{ " + treeOut + " }\n";
+
+	cout << "Delete 7\n";
+	TreeDelete(root, 7);
+	treeOut = "";
+	TreePrint(root, treeOut);
+	cout << "{ " + treeOut + " }\n";
+
+	cout << "Delete 6\n";
+	TreeDelete(root, 6);
+	treeOut = "";
+	TreePrint(root, treeOut);
+	cout << "{ " + treeOut + " }\n";
 	
 	return 1;
 }

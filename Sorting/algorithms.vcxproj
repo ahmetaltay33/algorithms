@@ -148,12 +148,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="binarytree.cpp" />
     <ClCompile Include="program.cpp" />
     <ClCompile Include="heapsort.cpp" />
     <ClCompile Include="insertionsort.cpp" />
     <ClCompile Include="mergesort.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="binarytree.h" />
     <ClInclude Include="heapsort.h" />
     <ClInclude Include="insertionsort.h" />
     <ClInclude Include="mergesort.h" />
